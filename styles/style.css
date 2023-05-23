@@ -1,26 +1,30 @@
-body {
+body,
+html {
+  margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   width: 100vw;
-  margin: 0;
-  background-color: #f0f0f0;
+  background-color: #000;
   overflow: hidden;
+  font-family: "Roboto", sans-serif;
+  color: #ffffff;
 }
 
 #game-container {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
-  overflow: hidden;
 }
 
 canvas {
-  border: 1px solid #000;
-  background-color: #e0e0f0;
+  border: 1px solid #fff;
+  background-color: #222;
   margin: auto;
 }
 
@@ -29,7 +33,7 @@ canvas {
   top: 10px;
   left: 50%;
   transform: translateX(-150%);
-  font-size: 1.2em;
+  font-size: 1.8em;
 }
 
 #highScore {
@@ -37,7 +41,7 @@ canvas {
   top: 10px;
   left: 50%;
   transform: translateX(50%);
-  font-size: 1.2em;
+  font-size: 1.8em;
 }
 
 #difficulty {
@@ -45,4 +49,34 @@ canvas {
   top: 10px;
   left: 10px;
   font-size: 1.2em;
+  background-color: #222;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+#difficulty:focus {
+  outline: none;
+}
+
+button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #222;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1em;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:focus {
+  outline: none;
+}
+
+button:hover {
+  background-color: #555;
 }

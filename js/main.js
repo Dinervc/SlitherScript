@@ -7,7 +7,7 @@ const ctx = canvas.getContext("2d");
 // Define maximum number of cells
 const maxCells = 20;
 // Margin for the grid in pixels
-const margin = 40;
+const margin = 60;
 
 // Declare variable for the score
 let score = 0;
@@ -42,14 +42,16 @@ function updateCanvasSize() {
   let cells = Math.min(cellsX, cellsY);
 
   // Update grid size and tile size
-  gridSize = { x: cellsX, y: cellsY };
+  gridSize = { x: cellsX < 1 ? 1 : cellsX, y: cellsY < 1 ? 1 : cellsY };
   tileSize = Math.min(Math.floor(width / cellsX), Math.floor(height / cellsY));
   canvas.width = tileSize * gridSize.x;
   canvas.height = tileSize * gridSize.y;
 
   // Center canvas on the page
-  canvas.style.marginLeft = (window.innerWidth - canvas.width) / 2 + "px";
-  canvas.style.marginTop = (window.innerHeight - canvas.height) / 2 + "px";
+  canvas.style.marginLeft = "auto";
+  canvas.style.marginTop = "auto";
+  canvas.style.marginRight = "auto";
+  canvas.style.marginBottom = "auto";
 
   // Update snake and apple position based on the new grid size
   snake = [{ x: Math.floor(gridSize.x / 2), y: Math.floor(gridSize.y / 2) }];
