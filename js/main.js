@@ -1,4 +1,4 @@
-// Grundfunktionen v0.1.0-beta 16.05.2023
+// "Quality of Life" improvements v0.1.1-beta 23.05.2023
 
 // Get canvas from HTML document
 const canvas = document.getElementById("gameCanvas");
@@ -6,6 +6,23 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 // Define maximum number of cells
 const maxCells = 20;
+// Margin for the grid in pixels
+const margin = 40;
+
+// Declare variable for the score
+let score = 0;
+let highScore = localStorage.getItem("highScore") || 0;
+// Get the initial speed from the difficulty selector
+let speed = document.getElementById("difficulty").value;
+
+// Display the score and high score
+function displayScore() {
+  document.getElementById("score").innerText = "Score: " + score;
+  document.getElementById("highScore").innerText = "High Score: " + highScore;
+}
+
+// Call displayScore once on initialization to display initial scores
+displayScore();
 
 // Declare variable for tile size and initial grid size
 let tileSize;
@@ -13,15 +30,13 @@ let gridSize = { x: maxCells, y: maxCells };
 
 // Function to update canvas size dynamically based on window size
 function updateCanvasSize() {
-  let margin = 40; // Margin for the grid in pixels
-
   // Calculate the available width and height after subtracting margins
   let width = window.innerWidth - 2 * margin;
   let height = window.innerHeight - 2 * margin;
 
   // Calculate the number of cells that can fit in the width and height
-  let cellsX = Math.floor(width / 40);
-  let cellsY = Math.floor(height / 40);
+  let cellsX = Math.floor(width / margin);
+  let cellsY = Math.floor(height / margin);
 
   // Pick the smaller number of cells to maintain a square grid
   let cells = Math.min(cellsX, cellsY);
@@ -91,6 +106,19 @@ function update() {
 
   // If the snake has eaten the apple
   if (head.x === apple.x && head.y === apple.y) {
+    // Increase the score
+    score++;
+    // Check if new score is a new high score
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("highScore", highScore);
+    }
+    // Update displayed score
+    displayScore();
+
+    // Update the speed of the snake based on the selected difficulty
+    speed = document.getElementById("difficulty").value;
+
     // Place a new apple at a random position
     apple = {
       x: Math.floor(Math.random() * gridSize.x),
@@ -102,7 +130,7 @@ function update() {
   }
 
   // Schedule next update
-  setTimeout(update, 100);
+  setTimeout(update, speed);
 }
 
 // Function to draw the grid lines
@@ -148,6 +176,23 @@ function draw() {
   // Schedule next draw
   requestAnimationFrame(draw);
 }
+
+// Listen for changes on the difficulty selector
+document.getElementById("difficulty").addEventListener("change", function () {
+  // Update the speed
+  speed = this.value;
+});
+
+window.onload = function () {
+  // Get the initial speed from the difficulty selector
+  speed = document.getElementById("difficulty").value;
+
+  // Listen for changes on the difficulty selector
+  document.getElementById("difficulty").addEventListener("change", function () {
+    // Update the speed
+    speed = this.value;
+  });
+};
 
 // Function to handle key down events
 function handleKeyDown(event) {

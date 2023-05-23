@@ -23,3 +23,26 @@ canvas {
   background-color: #e0e0f0;
   margin: auto;
 }
+
+#score {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-150%);
+  font-size: 1.2em;
+}
+
+#highScore {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(50%);
+  font-size: 1.2em;
+}
+
+#difficulty {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.2em;
+}
