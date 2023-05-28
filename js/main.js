@@ -1,4 +1,4 @@
-// "Quality of Life" improvements v0.1.1-beta 23.05.2023
+// Design improvements v0.1.3-beta 30.05.2023
 
 // Get canvas from HTML document
 const canvas = document.getElementById("gameCanvas");
@@ -8,6 +8,8 @@ const ctx = canvas.getContext("2d");
 const maxCells = 20;
 // Margin for the grid in pixels
 const margin = 60;
+// Frame counter variable for matrix color
+let frameCounter = 0;
 
 // Declare variable for the score
 let score = 0;
@@ -46,12 +48,6 @@ function updateCanvasSize() {
   tileSize = Math.min(Math.floor(width / cellsX), Math.floor(height / cellsY));
   canvas.width = tileSize * gridSize.x;
   canvas.height = tileSize * gridSize.y;
-
-  // Center canvas on the page
-  canvas.style.marginLeft = "auto";
-  canvas.style.marginTop = "auto";
-  canvas.style.marginRight = "auto";
-  canvas.style.marginBottom = "auto";
 
   // Update snake and apple position based on the new grid size
   snake = [{ x: Math.floor(gridSize.x / 2), y: Math.floor(gridSize.y / 2) }];
@@ -157,8 +153,33 @@ function drawGrid() {
   }
 }
 
+// Draws snake with design
+function drawRotatedRect(x, y, width, height, color) {
+  ctx.save(); // Save the current context state
+  ctx.translate(x + width / 2, y + height / 2);
+
+  // Rotate the context by a 0, 90, 180, or 270 degrees
+  const randomAngle = (Math.floor(Math.random() * 4) * Math.PI) / 2; // Random angle in radians
+  ctx.rotate(randomAngle);
+
+  // Draw this body segment
+  ctx.fillStyle = color;
+  ctx.fillRect(-width / 2, -height / 2, width, height);
+
+  ctx.restore(); // Restore the context state to what it was before we translated/rotated it
+}
+
 // Function to draw the game state
 function draw() {
+  let matrixColors = [
+    "#5f9c23",
+    "#8af421",
+    "#6f8756",
+    "#cef7a5",
+    "#677459",
+    "#000000",
+  ];
+
   // Clear the canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -166,9 +187,25 @@ function draw() {
   drawGrid();
 
   // Draw the snake
-  ctx.fillStyle = "green";
-  for (const part of snake) {
-    ctx.fillRect(part.x * tileSize, part.y * tileSize, tileSize, tileSize);
+  for (let i = 0; i < snake.length; i++) {
+    const part = snake[i];
+    if (snakeDesign === "goat") {
+      drawRotatedImage(
+        goatImg,
+        part.x * tileSize,
+        part.y * tileSize,
+        tileSize,
+        tileSize
+      );
+    } else if (snakeDesign === "matrix") {
+      // Select a random color from matrixColors
+      ctx.fillStyle =
+        matrixColors[Math.floor(Math.random() * matrixColors.length)];
+      ctx.fillRect(part.x * tileSize, part.y * tileSize, tileSize, tileSize);
+    } else {
+      ctx.fillStyle = snakeDesign;
+      ctx.fillRect(part.x * tileSize, part.y * tileSize, tileSize, tileSize);
+    }
   }
 
   // Draw the apple
@@ -179,22 +216,56 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-// Listen for changes on the difficulty selector
-document.getElementById("difficulty").addEventListener("change", function () {
-  // Update the speed
-  speed = this.value;
-});
+// Design variables
+let snakeDesign = "green";
+let gameColor = "#000";
+// Define a new Image object and set its source to the goat texture
+const goatImg = new Image();
+goatImg.src = "resources/goatTexture.png";
 
-window.onload = function () {
-  // Get the initial speed from the difficulty selector
-  speed = document.getElementById("difficulty").value;
+// Update snake design
+function updateDesign() {
+  let designSelect = document.getElementById("snakeDesign");
+  snakeDesign = designSelect.options[designSelect.selectedIndex].value;
 
-  // Listen for changes on the difficulty selector
-  document.getElementById("difficulty").addEventListener("change", function () {
-    // Update the speed
-    speed = this.value;
-  });
-};
+  /*
+
+  Add this code if more textures in the future
+
+  if (snakeDesign === "goat") {
+    // Replace with your image URL
+    goatImg.src = "placeholder_for_your_image_url";
+  }
+  */
+}
+
+// Update game design
+function updateColor() {
+  let selectedValue = document.getElementById("gameColor").value;
+  if (selectedValue == "goat") {
+    // Replace with your image URL
+    let goatImageUrl = "resources/goatTexture.png";
+    document.getElementById("gameCanvas").style.backgroundImage =
+      "url(" + goatImageUrl + ")";
+    document.getElementById("gameCanvas").style.backgroundSize = "cover";
+  } else {
+    document.getElementById("gameCanvas").style.backgroundColor = selectedValue;
+    document.getElementById("gameCanvas").style.backgroundImage = "none";
+  }
+}
+
+function drawRotatedImage(image, x, y, width, height) {
+  ctx.save();
+  ctx.translate(x + width / 2, y + height / 2);
+
+  const randomAngle = (Math.floor(Math.random() * 4) * Math.PI) / 2;
+  ctx.rotate(randomAngle);
+
+  // Draw this body segment
+  ctx.drawImage(image, -width / 2, -height / 2, width, height);
+
+  ctx.restore();
+}
 
 // Function to handle key down events
 function handleKeyDown(event) {
@@ -227,6 +298,6 @@ window.addEventListener(
   false
 );
 
-// Start the game
+// Starts the game
 update();
 draw();
