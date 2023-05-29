@@ -11,30 +11,40 @@
     />
   </head>
   <body>
+    <span id="score">Score: 0</span>
     <div id="game-container">
       <canvas id="gameCanvas"></canvas>
     </div>
-    <div id="score">Score: 0</div>
-    <div id="highScore">High Score: 0</div>
-    <select id="difficulty">
-      <option value="200">Easy</option>
-      <option value="150">Medium</option>
-      <option value="100">Hard</option>
-    </select>
+    <div id="sidebar">
+      <span id="highScore">High Score: 0</span>
+      <select id="difficulty" onchange="updateDifficulty()">
+        <option value="200">Easy</option>
+        <option value="150">Medium</option>
+        <option value="100">Hard</option>
+      </select>
+      <select id="snakeDesign" onchange="updateDesign()">
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+        <option value="matrix">Matrix</option>
+        <option value="goat">Goat</option>
+      </select>
+      <select id="gameColor" onchange="updateColor()">
+        <option value="#222">Standard</option>
+        <option value="#0aa">Ocean</option>
+        <option value="#80aa80">Grass</option>
+      </select>
+    </div>
 
-    <select id="snakeDesign" onchange="updateDesign()">
-      <option value="green">Green</option>
-      <option value="blue">Blue</option>
-      <option value="matrix">Matrix</option>
-      <option value="goat">Goat</option>
-    </select>
+    <div class="hamburger">&#9776;</div>
 
-    <select id="gameColor" onchange="updateColor()">
-      <option value="#222">Standard</option>
-      <option value="#0aa">Ocean</option>
-      <option value="#80aa80">Grass</option>
-    </select>
+    <script>
+      let sidebar = document.getElementById("sidebar");
+      let hamburger = document.querySelector(".hamburger");
 
+      hamburger.addEventListener("click", function () {
+        sidebar.classList.toggle("open");
+      });
+    </script>
     <script src="js/main.js"></script>
   </body>
 </html>

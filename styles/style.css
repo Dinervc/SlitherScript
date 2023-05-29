@@ -2,15 +2,12 @@ body,
 html {
   margin: 0;
   padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   height: 100vh;
   width: 100vw;
   background-color: #000;
-  overflow: hidden;
   font-family: "Roboto", sans-serif;
   color: #ffffff;
+  overflow: hidden;
 }
 
 #game-container {
@@ -18,66 +15,77 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
   height: 100%;
 }
 
 canvas {
   border: 1px solid #fff;
   background-color: #222;
+  max-width: 100%;
+  max-height: 100%;
   margin: auto;
+}
+
+.hamburger {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  cursor: pointer;
+  font-size: 30px;
+  color: #ffffff;
+}
+
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 250px;
+  background: #222;
+  z-index: 1;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+#sidebar.open {
+  transform: translateX(0);
+}
+
+#highScore {
+  color: #ffffff;
+  margin-bottom: 20px;
+  margin-top: 50px;
+  font-size: 20px;
+}
+
+#difficulty,
+#snakeDesign,
+#gameColor {
+  width: 100%;
+  color: #000;
+  margin-bottom: 20px;
 }
 
 #score {
   position: absolute;
   top: 10px;
   left: 50%;
-  transform: translateX(-150%);
-  font-size: 1.8em;
+  font-size: 30px;
+  transform: translateX(-50%);
+  color: #ffffff;
 }
 
-#highScore {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(50%);
-  font-size: 1.8em;
-}
+@media only screen and (max-width: 600px) {
+  #game-container {
+    padding-top: 50px;
+  }
 
-#difficulty,
-#snakeDesign,
-#gameColor {
-  position: absolute;
-  top: 10px;
-  font-size: 1.2em;
-  background-color: #222;
-  color: #fff;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
+  #sidebar {
+    width: 93%vw;
+  }
 }
-
-#difficulty:focus,
-#snakeDesign:focus,
-#gameColor:focus {
-  outline: none;
-}
-
-#difficulty:hover,
-#snakeDesign:hover,
-#gameColor:hover {
-  background-color: #555;
-}
-
-#difficulty {
-  left: 10px;
-}
-
-#snakeDesign {
-  left: calc(10px + 120px); /* adjust as needed */
-}
-
-#gameColor {
-  left: calc(10px + 2 * 110px); /* adjust as needed */
-}
-
