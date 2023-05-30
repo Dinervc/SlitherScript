@@ -378,8 +378,6 @@ function moveTouch(e) {
 
   initialX = null;
   initialY = null;
-
-  e.preventDefault();
 }
 
 function moveMouse(e) {
@@ -401,12 +399,12 @@ function endMouse() {
   isSwiping = false;
 }
 
-window.addEventListener("touchstart", startTouch, false);
-window.addEventListener("touchmove", moveTouch, false);
+window.addEventListener("touchstart", startTouch);
+window.addEventListener("touchmove", moveTouch);
 
-window.addEventListener("mousedown", startMouse, false);
-window.addEventListener("mousemove", moveMouse, false);
-window.addEventListener("mouseup", endMouse, false);
+window.addEventListener("mousedown", startMouse);
+window.addEventListener("mousemove", moveMouse);
+window.addEventListener("mouseup", endMouse);
 
 // Starts the game
 update();
