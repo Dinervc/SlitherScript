@@ -267,6 +267,13 @@ function drawRotatedImage(image, x, y, width, height) {
   ctx.restore();
 }
 
+let sidebar = document.getElementById("sidebar");
+let hamburger = document.querySelector(".hamburger");
+
+hamburger.addEventListener("click", function () {
+  sidebar.classList.toggle("open");
+});
+
 // Function to handle key down events
 function handleKeyDown(event) {
   // Change velocity based on the pressed arrow key

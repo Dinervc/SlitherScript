@@ -17,17 +17,20 @@
     </div>
     <div id="sidebar">
       <span id="highScore">High Score: 0</span>
+      <span>Difficulty:</span>
       <select id="difficulty" onchange="updateDifficulty()">
         <option value="200">Easy</option>
         <option value="150">Medium</option>
         <option value="100">Hard</option>
       </select>
+      <span>Snake Color: </span>
       <select id="snakeDesign" onchange="updateDesign()">
         <option value="green">Green</option>
         <option value="blue">Blue</option>
         <option value="matrix">Matrix</option>
         <option value="goat">Goat</option>
       </select>
+      <span>Game Color: </span>
       <select id="gameColor" onchange="updateColor()">
         <option value="#222">Standard</option>
         <option value="#0aa">Ocean</option>
@@ -36,15 +39,6 @@
     </div>
 
     <div class="hamburger">&#9776;</div>
-
-    <script>
-      let sidebar = document.getElementById("sidebar");
-      let hamburger = document.querySelector(".hamburger");
-
-      hamburger.addEventListener("click", function () {
-        sidebar.classList.toggle("open");
-      });
-    </script>
     <script src="js/main.js"></script>
   </body>
 </html>
