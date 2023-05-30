@@ -80,11 +80,19 @@ canvas {
   color: #ffffff;
 }
 
-@media only screen and (max-width: 600px) {
-  #game-container {
-    padding-top: 50px;
-  }
+#pause-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  padding: 10px;
+  color: #ffffff;
+  background-color: #222;
+  border: none;
+  font-size: 20px;
+}
 
+@media only screen and (max-width: 600px) {
   #sidebar {
     width: 93%vw;
   }

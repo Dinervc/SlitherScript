@@ -1,4 +1,4 @@
-// Design improvements v0.1.3-beta 30.05.2023
+// Touch Support v0.1.4-beta 30.05.2023
 
 // Get canvas from HTML document
 const canvas = document.getElementById("gameCanvas");
@@ -79,6 +79,8 @@ window.addEventListener("resize", updateCanvasSize);
 
 // Function to update game state at each step
 function update() {
+  // If the game is paused or the snake is dead, no update occurs.
+  if (paused || isDead) return;
   // Calculate new head position based on current velocity
   const head = { x: snake[0].x + velocity.x, y: snake[0].y + velocity.y };
 
@@ -89,12 +91,14 @@ function update() {
     head.x >= gridSize.x ||
     head.y >= gridSize.y
   ) {
+    isDead = true;
     return;
   }
 
   // Game ends if the snake hits itself
   for (let i = 1; i < snake.length; i++) {
-    if (head.x === snake[i].x && head.y === snake[i].y) {
+    if (snake[i].x === head.x && snake[i].y === head.y) {
+      isDead = true;
       return;
     }
   }
@@ -274,17 +278,23 @@ hamburger.addEventListener("click", function () {
   sidebar.classList.toggle("open");
 });
 
+let lastMoveDirection = null;
+
 // Function to handle key down events
 function handleKeyDown(event) {
   // Change velocity based on the pressed arrow key
-  if (event.key === "ArrowUp" && velocity.y === 0) {
+  if (event.key === "ArrowUp" && lastMoveDirection !== "down") {
     velocity = { x: 0, y: -1 };
-  } else if (event.key === "ArrowDown" && velocity.y === 0) {
+    lastMoveDirection = "up";
+  } else if (event.key === "ArrowDown" && lastMoveDirection !== "up") {
     velocity = { x: 0, y: 1 };
-  } else if (event.key === "ArrowLeft" && velocity.x === 0) {
+    lastMoveDirection = "down";
+  } else if (event.key === "ArrowLeft" && lastMoveDirection !== "right") {
     velocity = { x: -1, y: 0 };
-  } else if (event.key === "ArrowRight" && velocity.x === 0) {
+    lastMoveDirection = "left";
+  } else if (event.key === "ArrowRight" && lastMoveDirection !== "left") {
     velocity = { x: 1, y: 0 };
+    lastMoveDirection = "right";
   }
 }
 
@@ -304,6 +314,99 @@ window.addEventListener(
   },
   false
 );
+
+let paused = false;
+let pauseButton = document.getElementById("pause-button");
+
+pauseButton.addEventListener("click", function () {
+  paused = !paused;
+  this.innerHTML = paused ? "Resume" : "Pause";
+  if (!paused) {
+    update();
+  }
+});
+
+let initialX = null;
+let initialY = null;
+let isSwiping = false;
+let isDead = false;
+
+function startTouch(e) {
+  initialX = e.touches[0].clientX;
+  initialY = e.touches[0].clientY;
+}
+
+function startMouse(e) {
+  isSwiping = true;
+  initialX = e.clientX;
+  initialY = e.clientY;
+}
+
+function moveTouch(e) {
+  if (initialX === null || initialY === null) {
+    return;
+  }
+
+  if (!isDead) {
+    const diffX = initialX - e.touches[0].clientX;
+    const diffY = initialY - e.touches[0].clientY;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      // Sliding horizontally
+      if (diffX > 0 && lastMoveDirection !== "right") {
+        // Slid left
+        velocity = { x: -1, y: 0 };
+        lastMoveDirection = "left";
+      } else if (lastMoveDirection !== "left") {
+        // Slid right
+        velocity = { x: 1, y: 0 };
+        lastMoveDirection = "right";
+      }
+    } else {
+      // Sliding vertically
+      if (diffY > 0 && lastMoveDirection !== "down") {
+        // Slid up
+        velocity = { x: 0, y: -1 };
+        lastMoveDirection = "up";
+      } else if (lastMoveDirection !== "up") {
+        // Slid down
+        velocity = { x: 0, y: 1 };
+        lastMoveDirection = "down";
+      }
+    }
+  }
+
+  initialX = null;
+  initialY = null;
+
+  e.preventDefault();
+}
+
+function moveMouse(e) {
+  if (initialX === null || initialY === null || !isSwiping) {
+    return;
+  }
+
+  moveTouch({
+    touches: [
+      {
+        clientX: e.clientX,
+        clientY: e.clientY,
+      },
+    ],
+  });
+}
+
+function endMouse() {
+  isSwiping = false;
+}
+
+window.addEventListener("touchstart", startTouch, false);
+window.addEventListener("touchmove", moveTouch, false);
+
+window.addEventListener("mousedown", startMouse, false);
+window.addEventListener("mousemove", moveMouse, false);
+window.addEventListener("mouseup", endMouse, false);
 
 // Starts the game
 update();

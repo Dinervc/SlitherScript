@@ -12,7 +12,12 @@
   </head>
   <body>
     <span id="score">Score: 0</span>
-    <div id="game-container">
+    <button id="pause-button">Pause</button>
+    <div
+      id="game-container"
+      ontouchstart="startTouch(event)"
+      ontouchmove="moveTouch(event)"
+    >
       <canvas id="gameCanvas"></canvas>
     </div>
     <div id="sidebar">
