@@ -1,4 +1,4 @@
-// Touch Support v0.1.4-beta 30.05.2023
+// PowerUps v0.1.5-beta 06.06.2023
 
 // Get canvas from HTML document
 const canvas = document.getElementById("gameCanvas");
@@ -40,9 +40,6 @@ function updateCanvasSize() {
   let cellsX = Math.floor(width / margin);
   let cellsY = Math.floor(height / margin);
 
-  // Pick the smaller number of cells to maintain a square grid
-  let cells = Math.min(cellsX, cellsY);
-
   // Update grid size and tile size
   gridSize = { x: cellsX < 1 ? 1 : cellsX, y: cellsY < 1 ? 1 : cellsY };
   tileSize = Math.min(Math.floor(width / cellsX), Math.floor(height / cellsY));
@@ -77,62 +74,70 @@ let velocity = { x: 0, y: 0 };
 // Update canvas size when window is resized
 window.addEventListener("resize", updateCanvasSize);
 
+let lastTime = 0;
+let accumTime = 0;
+let prevSnake = []; // An array to keep track of the previous snake state
+
 // Function to update game state at each step
-function update() {
-  // If the game is paused or the snake is dead, no update occurs.
-  if (paused || isDead) return;
-  // Calculate new head position based on current velocity
-  const head = { x: snake[0].x + velocity.x, y: snake[0].y + velocity.y };
+function update(currentTime) {
+  if (!paused && !isDead) {
+    // If we have a resumeTime (i.e., we've just resumed), use it to offset lastTime
+    let effectiveLastTime = resumeTime ? resumeTime : lastTime;
+    // Reset resumeTime now that we've used it
+    resumeTime = 0;
 
-  // Game ends if the snake hits the grid boundary
-  if (
-    head.x < 0 ||
-    head.y < 0 ||
-    head.x >= gridSize.x ||
-    head.y >= gridSize.y
-  ) {
-    isDead = true;
-    return;
-  }
+    let deltaTime = currentTime - effectiveLastTime;
+    lastTime = currentTime;
+    accumTime += deltaTime;
 
-  // Game ends if the snake hits itself
-  for (let i = 1; i < snake.length; i++) {
-    if (snake[i].x === head.x && snake[i].y === head.y) {
-      isDead = true;
-      return;
+    if (accumTime >= speed) {
+      // Keep a copy of the old snake state
+      prevSnake = snake.map((part) => ({ x: part.x, y: part.y }));
+
+      const head = { x: snake[0].x + velocity.x, y: snake[0].y + velocity.y };
+
+      if (
+        head.x < 0 ||
+        head.y < 0 ||
+        head.x >= gridSize.x ||
+        head.y >= gridSize.y
+      ) {
+        isDead = true;
+        return;
+      }
+
+      for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) {
+          isDead = true;
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      if (head.x === apple.x && head.y === apple.y) {
+        score++;
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("highScore", highScore);
+        }
+        displayScore();
+
+        speed = document.getElementById("difficulty").value;
+
+        apple = {
+          x: Math.floor(Math.random() * gridSize.x),
+          y: Math.floor(Math.random() * gridSize.y),
+        };
+      } else {
+        snake.pop();
+      }
+
+      accumTime -= speed;
     }
   }
 
-  // Add new head to the snake
-  snake.unshift(head);
-
-  // If the snake has eaten the apple
-  if (head.x === apple.x && head.y === apple.y) {
-    // Increase the score
-    score++;
-    // Check if new score is a new high score
-    if (score > highScore) {
-      highScore = score;
-      localStorage.setItem("highScore", highScore);
-    }
-    // Update displayed score
-    displayScore();
-
-    // Update the speed of the snake based on the selected difficulty
-    speed = document.getElementById("difficulty").value;
-
-    // Place a new apple at a random position
-    apple = {
-      x: Math.floor(Math.random() * gridSize.x),
-      y: Math.floor(Math.random() * gridSize.y),
-    };
-  } else {
-    // Remove the tail of the snake if it has not eaten an apple
-    snake.pop();
-  }
-
-  // Schedule next update
-  setTimeout(update, speed);
+  requestAnimationFrame(update);
 }
 
 // Function to draw the grid lines
@@ -175,49 +180,54 @@ function drawRotatedRect(x, y, width, height, color) {
 
 // Function to draw the game state
 function draw() {
-  let matrixColors = [
-    "#5f9c23",
-    "#8af421",
-    "#6f8756",
-    "#cef7a5",
-    "#677459",
-    "#000000",
-  ];
+  if (!paused && !isDead) {
+    let matrixColors = [
+      "#5f9c23",
+      "#8af421",
+      "#6f8756",
+      "#cef7a5",
+      "#677459",
+      "#000000",
+    ];
 
-  // Clear the canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
 
-  // Draw the grid
-  drawGrid();
+    let lerpFactor = accumTime / speed;
 
-  // Draw the snake
-  for (let i = 0; i < snake.length; i++) {
-    const part = snake[i];
-    if (snakeDesign === "goat") {
-      drawRotatedImage(
-        goatImg,
-        part.x * tileSize,
-        part.y * tileSize,
-        tileSize,
-        tileSize
-      );
-    } else if (snakeDesign === "matrix") {
-      // Select a random color from matrixColors
-      ctx.fillStyle =
-        matrixColors[Math.floor(Math.random() * matrixColors.length)];
-      ctx.fillRect(part.x * tileSize, part.y * tileSize, tileSize, tileSize);
-    } else {
-      ctx.fillStyle = snakeDesign;
-      ctx.fillRect(part.x * tileSize, part.y * tileSize, tileSize, tileSize);
+    for (let i = 0; i < snake.length; i++) {
+      const part = snake[i];
+      let prevPart = prevSnake[i] || part;
+      let lerpX = lerp(prevPart.x, part.x, lerpFactor);
+      let lerpY = lerp(prevPart.y, part.y, lerpFactor);
+
+      if (snakeDesign === "goat") {
+        drawRotatedImage(
+          goatImg,
+          lerpX * tileSize,
+          lerpY * tileSize,
+          tileSize,
+          tileSize
+        );
+      } else if (snakeDesign === "matrix") {
+        ctx.fillStyle =
+          matrixColors[Math.floor(Math.random() * matrixColors.length)];
+        ctx.fillRect(lerpX * tileSize, lerpY * tileSize, tileSize, tileSize);
+      } else {
+        ctx.fillStyle = snakeDesign;
+        ctx.fillRect(lerpX * tileSize, lerpY * tileSize, tileSize, tileSize);
+      }
     }
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
   }
 
-  // Draw the apple
-  ctx.fillStyle = "red";
-  ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
-
-  // Schedule next draw
   requestAnimationFrame(draw);
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
 }
 
 // Design variables
@@ -317,12 +327,16 @@ window.addEventListener(
 
 let paused = false;
 let pauseButton = document.getElementById("pause-button");
+let resumeTime = 0;
 
 pauseButton.addEventListener("click", function () {
   paused = !paused;
   this.innerHTML = paused ? "Resume" : "Pause";
   if (!paused) {
-    update();
+    // Record the time at which we resumed the game
+    resumeTime = performance.now();
+    // Start the update loop again
+    requestAnimationFrame(update);
   }
 });
 
@@ -332,14 +346,32 @@ let isSwiping = false;
 let isDead = false;
 
 function startTouch(e) {
-  initialX = e.touches[0].clientX;
-  initialY = e.touches[0].clientY;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.touches[0].clientX;
+  const y = e.touches[0].clientY;
+
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    // Touch is outside the canvas, don't start the movement
+    return;
+  }
+
+  initialX = x;
+  initialY = y;
 }
 
 function startMouse(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX;
+  const y = e.clientY;
+
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    // Mouse click is outside the canvas, don't start the movement
+    return;
+  }
+
   isSwiping = true;
-  initialX = e.clientX;
-  initialY = e.clientY;
+  initialX = x;
+  initialY = y;
 }
 
 function moveTouch(e) {
@@ -407,5 +439,5 @@ window.addEventListener("mousemove", moveMouse);
 window.addEventListener("mouseup", endMouse);
 
 // Starts the game
-update();
-draw();
+requestAnimationFrame(update);
+requestAnimationFrame(draw);

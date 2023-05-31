@@ -8,6 +8,7 @@ html {
   font-family: "Roboto", sans-serif;
   color: #ffffff;
   overflow: hidden;
+  touch-action: none;
 }
 
 #game-container {
