@@ -17,7 +17,8 @@ let mirror = 1;
 let score = 0;
 let highScore = localStorage.getItem("highScore") || 0;
 // Get the initial speed from the difficulty selector
-let speed = document.getElementById("difficulty").value;
+speed = document.getElementById("difficulty").value;
+let nextSpeed = speed;
 
 // Display the score and high score
 function displayScore() {
@@ -171,12 +172,12 @@ function update(currentTime) {
 
       // See if touching power up
       if (head.x === powerup.x && head.y === powerup.y) {
-        speed = document.getElementById("difficulty").value;
+        nextSpeed = document.getElementById("difficulty").value;
         mirror = 1;
 
         switch (powerupsData[powerup.type].id) {
           case 0:
-            speed = powerupsData[powerup.type].value;
+            nextSpeed = powerupsData[powerup.type].value;
             break;
           case 1:
             mirror = -1;
@@ -205,7 +206,7 @@ function update(currentTime) {
         }
         displayScore();
 
-        speed = document.getElementById("difficulty").value;
+        speed = nextSpeed = document.getElementById("difficulty").value;
 
         do {
           apple = {
@@ -218,6 +219,8 @@ function update(currentTime) {
       }
 
       accumTime -= speed;
+
+      speed = nextSpeed;
 
       canChangeDirection = true;
     }
