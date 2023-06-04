@@ -10,6 +10,8 @@ const maxCells = 20;
 const margin = 60;
 // Frame counter variable for matrix color
 let frameCounter = 0;
+// Controls (important for mirror powerup)
+let mirror = 1;
 
 // Declare variable for the score
 let score = 0;
@@ -49,10 +51,22 @@ function updateCanvasSize() {
   // Update snake and apple position based on the new grid size
   snake = [{ x: Math.floor(gridSize.x / 2), y: Math.floor(gridSize.y / 2) }];
   if (apple.x >= gridSize.x || apple.y >= gridSize.y) {
-    apple = {
-      x: Math.floor(Math.random() * gridSize.x),
-      y: Math.floor(Math.random() * gridSize.y),
-    };
+    do {
+      apple = {
+        x: Math.floor(Math.random() * gridSize.x),
+        y: Math.floor(Math.random() * gridSize.y),
+      };
+    } while (apple.x == powerup.x && apple.y == powerup.y);
+  }
+  if (powerup.x >= gridSize.x || powerup.y >= gridSize.y) {
+    do {
+      powerup = {
+        x: Math.floor(Math.random() * gridSize.x),
+        y: Math.floor(Math.random() * gridSize.y),
+        type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
+      };
+    } while (powerup.x === apple.x && powerup.y === apple.y);
+    powerupCurrentImage.src = powerupsData[powerup.type].style;
   }
 }
 
@@ -64,6 +78,46 @@ let apple = {
   x: Math.floor(Math.random() * gridSize.x),
   y: Math.floor(Math.random() * gridSize.y),
 };
+
+// Place powerup at random position in the grid
+let powerup;
+
+// Power Ups variable
+const powerupsData = [
+  {
+    id: 0,
+    value: 500,
+    style: "resources/clock.webp",
+    desc: "Slow Motion Power Up",
+  },
+  {
+    id: 1,
+    value: -1,
+    style: "resources/mirror.webp",
+    desc: "Mirrored Controls Power Up",
+  },
+  {
+    id: 2,
+    value: 25,
+    style: "resources/flash.webp",
+    desc: "The Flash Power Up",
+  },
+];
+
+const powerupCurrentImage = new Image();
+
+function powerUpPlacementBeginning() {
+  do {
+    powerup = {
+      x: Math.floor(Math.random() * gridSize.x),
+      y: Math.floor(Math.random() * gridSize.y),
+      type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
+    };
+  } while (powerup.x === apple.x && powerup.y === apple.y);
+  powerupCurrentImage.src = powerupsData[powerup.type].style;
+}
+
+powerUpPlacementBeginning();
 
 // Update canvas size upon initialization
 updateCanvasSize();
@@ -115,6 +169,34 @@ function update(currentTime) {
 
       snake.unshift(head);
 
+      // See if touching power up
+      if (head.x === powerup.x && head.y === powerup.y) {
+        speed = document.getElementById("difficulty").value;
+        mirror = 1;
+
+        switch (powerupsData[powerup.type].id) {
+          case 0:
+            speed = powerupsData[powerup.type].value;
+            break;
+          case 1:
+            mirror = -1;
+            break;
+          default:
+            break;
+        }
+
+        do {
+          powerup = {
+            x: Math.floor(Math.random() * gridSize.x),
+            y: Math.floor(Math.random() * gridSize.y),
+            type: powerupsData[Math.floor(Math.random() * powerupsData.length)]
+              .id,
+          };
+        } while (powerup.x === apple.x && powerup.y === apple.y);
+        powerupCurrentImage.src = powerupsData[powerup.type].style;
+      }
+
+      // See if touching apple
       if (head.x === apple.x && head.y === apple.y) {
         score++;
         if (score > highScore) {
@@ -125,15 +207,19 @@ function update(currentTime) {
 
         speed = document.getElementById("difficulty").value;
 
-        apple = {
-          x: Math.floor(Math.random() * gridSize.x),
-          y: Math.floor(Math.random() * gridSize.y),
-        };
+        do {
+          apple = {
+            x: Math.floor(Math.random() * gridSize.x),
+            y: Math.floor(Math.random() * gridSize.y),
+          };
+        } while (apple.x == powerup.x && apple.y == powerup.y);
       } else {
         snake.pop();
       }
 
       accumTime -= speed;
+
+      canChangeDirection = true;
     }
   }
 
@@ -221,6 +307,23 @@ function draw() {
 
     ctx.fillStyle = "red";
     ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
+
+    // Power Up Draw
+    ctx.save();
+    ctx.translate(
+      powerup.x * tileSize + tileSize / 2,
+      powerup.y * tileSize + tileSize / 2
+    );
+    // Draw this body segment
+    ctx.drawImage(
+      powerupCurrentImage,
+      -tileSize / 2,
+      -tileSize / 2,
+      tileSize,
+      tileSize
+    );
+
+    ctx.restore();
   }
 
   requestAnimationFrame(draw);
@@ -235,7 +338,7 @@ let snakeDesign = "green";
 let gameColor = "#000";
 // Define a new Image object and set its source to the goat texture
 const goatImg = new Image();
-goatImg.src = "resources/goatTexture.png";
+goatImg.src = "resources/goatTexture.webp";
 
 // Update snake design
 function updateDesign() {
@@ -289,25 +392,43 @@ hamburger.addEventListener("click", function () {
 });
 
 let lastMoveDirection = null;
+let canChangeDirection = true; // Allow direction change initially
 
 // Function to handle key down events
-function handleKeyDown(event) {
-  // Change velocity based on the pressed arrow key
-  if (event.key === "ArrowUp" && lastMoveDirection !== "down") {
-    velocity = { x: 0, y: -1 };
-    lastMoveDirection = "up";
-  } else if (event.key === "ArrowDown" && lastMoveDirection !== "up") {
-    velocity = { x: 0, y: 1 };
-    lastMoveDirection = "down";
-  } else if (event.key === "ArrowLeft" && lastMoveDirection !== "right") {
-    velocity = { x: -1, y: 0 };
-    lastMoveDirection = "left";
-  } else if (event.key === "ArrowRight" && lastMoveDirection !== "left") {
-    velocity = { x: 1, y: 0 };
-    lastMoveDirection = "right";
+function handleKeyDown(e) {
+  if (!canChangeDirection) return; // If a direction change is not allowed, return
+
+  switch (e.key) {
+    case "ArrowUp":
+      if (lastMoveDirection !== "down") {
+        velocity = { x: 0, y: -1 * mirror };
+        lastMoveDirection = "up";
+        canChangeDirection = false;
+      }
+      break;
+    case "ArrowDown":
+      if (lastMoveDirection !== "up") {
+        velocity = { x: 0, y: 1 * mirror };
+        lastMoveDirection = "down";
+        canChangeDirection = false;
+      }
+      break;
+    case "ArrowRight":
+      if (lastMoveDirection !== "left") {
+        velocity = { x: 1 * mirror, y: 0 };
+        lastMoveDirection = "right";
+        canChangeDirection = false;
+      }
+      break;
+    case "ArrowLeft":
+      if (lastMoveDirection !== "right") {
+        velocity = { x: -1 * mirror, y: 0 };
+        lastMoveDirection = "left";
+        canChangeDirection = false;
+      }
+      break;
   }
 }
-
 // Listen for key down events
 window.addEventListener("keydown", handleKeyDown);
 
@@ -387,22 +508,22 @@ function moveTouch(e) {
       // Sliding horizontally
       if (diffX > 0 && lastMoveDirection !== "right") {
         // Slid left
-        velocity = { x: -1, y: 0 };
+        velocity = { x: -1 * mirror, y: 0 };
         lastMoveDirection = "left";
       } else if (lastMoveDirection !== "left") {
         // Slid right
-        velocity = { x: 1, y: 0 };
+        velocity = { x: 1 * mirror, y: 0 };
         lastMoveDirection = "right";
       }
     } else {
       // Sliding vertically
       if (diffY > 0 && lastMoveDirection !== "down") {
         // Slid up
-        velocity = { x: 0, y: -1 };
+        velocity = { x: 0, y: -1 * mirror };
         lastMoveDirection = "up";
       } else if (lastMoveDirection !== "up") {
         // Slid down
-        velocity = { x: 0, y: 1 };
+        velocity = { x: 0, y: 1 * mirror };
         lastMoveDirection = "down";
       }
     }
