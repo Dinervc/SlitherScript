@@ -15,6 +15,7 @@ let mirror = 1;
 
 // Declare variable for the score
 let score = 0;
+let scoreAddition = 1;
 let highScore = localStorage.getItem("highScore") || 0;
 // Get the initial speed from the difficulty selector
 speed = document.getElementById("difficulty").value;
@@ -60,13 +61,11 @@ function updateCanvasSize() {
     } while (apple.x == powerup.x && apple.y == powerup.y);
   }
   if (powerup.x >= gridSize.x || powerup.y >= gridSize.y) {
-    do {
-      powerup = {
-        x: Math.floor(Math.random() * gridSize.x),
-        y: Math.floor(Math.random() * gridSize.y),
-        type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
-      };
-    } while (powerup.x === apple.x && powerup.y === apple.y);
+    // Spawns powerup after 10-20 seconds
+    setTimeout(
+      spawnPowAfterTime,
+      Math.floor(Math.random() * (20 - 10 + 1) + 10)
+    );
     powerupCurrentImage.src = powerupsData[powerup.type].style;
   }
 }
@@ -79,6 +78,9 @@ let apple = {
   x: Math.floor(Math.random() * gridSize.x),
   y: Math.floor(Math.random() * gridSize.y),
 };
+
+let appleImg = new Image();
+appleImg.src = "resources/apple.webp";
 
 // Place powerup at random position in the grid
 let powerup;
@@ -99,9 +101,21 @@ const powerupsData = [
   },
   {
     id: 2,
-    value: 25,
+    value: 50,
     style: "resources/flash.webp",
     desc: "The Flash Power Up",
+  },
+  {
+    id: 3,
+    value: 2,
+    style: "resources/2x.webp",
+    desc: "2x Score Power Up",
+  },
+  {
+    id: 4,
+    value: true,
+    style: "resources/death.webp",
+    desc: "Death Power Down",
   },
 ];
 
@@ -119,6 +133,17 @@ function powerUpPlacementBeginning() {
 }
 
 powerUpPlacementBeginning();
+
+function spawnPowAfterTime() {
+  do {
+    powerup = {
+      x: Math.floor(Math.random() * gridSize.x),
+      y: Math.floor(Math.random() * gridSize.y),
+      type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
+    };
+  } while (powerup.x === apple.x && powerup.y === apple.y);
+  powerupCurrentImage.src = powerupsData[powerup.type].style;
+}
 
 // Update canvas size upon initialization
 updateCanvasSize();
@@ -174,6 +199,7 @@ function update(currentTime) {
       if (head.x === powerup.x && head.y === powerup.y) {
         nextSpeed = document.getElementById("difficulty").value;
         mirror = 1;
+        scoreAddition = 1;
 
         switch (powerupsData[powerup.type].id) {
           case 0:
@@ -182,31 +208,41 @@ function update(currentTime) {
           case 1:
             mirror = -1;
             break;
+          case 2:
+            nextSpeed = powerupsData[powerup.type].value;
+            break;
+          case 3:
+            scoreAddition = 2;
+            break;
+          case 4:
+            isDead = powerupsData[powerup.type].value;
+            break;
           default:
             break;
         }
 
-        do {
-          powerup = {
-            x: Math.floor(Math.random() * gridSize.x),
-            y: Math.floor(Math.random() * gridSize.y),
-            type: powerupsData[Math.floor(Math.random() * powerupsData.length)]
-              .id,
-          };
-        } while (powerup.x === apple.x && powerup.y === apple.y);
-        powerupCurrentImage.src = powerupsData[powerup.type].style;
+        powerup = {
+          x: -1,
+          y: -1,
+          type: null,
+        };
+        // Spawns powerup after 10-20 seconds
+        setTimeout(
+          spawnPowAfterTime,
+          Math.floor(Math.random() * (20000 - 10000 + 1) + 10000)
+        );
       }
 
       // See if touching apple
       if (head.x === apple.x && head.y === apple.y) {
-        score++;
+        score += scoreAddition;
         if (score > highScore) {
           highScore = score;
           localStorage.setItem("highScore", highScore);
         }
         displayScore();
 
-        speed = nextSpeed = document.getElementById("difficulty").value;
+        speed = nextSpeed;
 
         do {
           apple = {
@@ -219,7 +255,6 @@ function update(currentTime) {
       }
 
       accumTime -= speed;
-
       speed = nextSpeed;
 
       canChangeDirection = true;
@@ -308,28 +343,23 @@ function draw() {
       }
     }
 
-    ctx.fillStyle = "red";
-    ctx.fillRect(apple.x * tileSize, apple.y * tileSize, tileSize, tileSize);
+    // Apple draw
+    drawImageRect(appleImg, apple.x, apple.y);
 
     // Power Up Draw
-    ctx.save();
-    ctx.translate(
-      powerup.x * tileSize + tileSize / 2,
-      powerup.y * tileSize + tileSize / 2
-    );
-    // Draw this body segment
-    ctx.drawImage(
-      powerupCurrentImage,
-      -tileSize / 2,
-      -tileSize / 2,
-      tileSize,
-      tileSize
-    );
-
-    ctx.restore();
+    drawImageRect(powerupCurrentImage, powerup.x, powerup.y);
   }
 
   requestAnimationFrame(draw);
+}
+
+function drawImageRect(img, x, y) {
+  ctx.save();
+  ctx.translate(x * tileSize + tileSize / 2, y * tileSize + tileSize / 2);
+  // Draw this body segment
+  ctx.drawImage(img, -tileSize / 2, -tileSize / 2, tileSize, tileSize);
+
+  ctx.restore();
 }
 
 function lerp(a, b, t) {
