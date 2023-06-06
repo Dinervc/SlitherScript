@@ -22,6 +22,7 @@ speed = document.getElementById("difficulty").value;
 let nextSpeed = speed;
 
 let isPowUpWaitingToSpawn = false;
+let isObstacleUpWaitingToSpawn = false;
 
 // Display the score and high score
 function displayScore() {
@@ -73,6 +74,18 @@ function updateCanvasSize() {
       Math.floor(Math.random() * (20 - 10 + 1) + 10)
     );
     powerupCurrentImage.src = powerupsData[powerup.type].style;
+  }
+  if (
+    obstacle.x >= gridSize.x ||
+    (obstacle.y >= gridSize.y && !isObstacleUpWaitingToSpawn)
+  ) {
+    isObstacleUpWaitingToSpawn = true;
+    // Spawns obstacle after 10-20 seconds
+    setTimeout(
+      spawnObstacleAfterTime,
+      Math.floor(Math.random() * (20 - 10 + 1) + 10)
+    );
+    obstacleCurrentImage.src = obstaclesData[obstacle.type].style;
   }
 }
 
@@ -142,22 +155,65 @@ function powerUpPlacementBeginning() {
 
 powerUpPlacementBeginning();
 
-function spawnPowAfterTime() {
-  isPowUpWaitingToSpawn = false;
+// Place powerup at random position in the grid
+let obstacle;
+
+// Power Ups variable
+const obstaclesData = [
+  {
+    name: "bleedScoreByOne",
+    value: 1,
+    style: "resources/bleed.webp",
+    desc: "Bleed Obstacle",
+  },
+  {
+    name: "addSnakeLength",
+    value: -1,
+    style: "resources/plusOne.webp",
+    desc: "Mirrored Controls Obstacle",
+  },
+  {
+    name: "blackHoleEatsPlayer",
+    value: true,
+    style: "resources/blackHole.webp",
+    desc: "The Flash Obstacle",
+  },
+];
+
+const obstacleCurrentImage = new Image();
+
+function obstaclePlacementBeginning() {
   do {
-    powerup = {
+    obstacle = {
       x: Math.floor(Math.random() * gridSize.x),
       y: Math.floor(Math.random() * gridSize.y),
-      type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
+      type: obstaclesData[Math.floor(Math.random() * obstaclesData.length)]
+        .name,
       active: false,
     };
-  } while (powerup.x === apple.x && powerup.y === apple.y);
-  powerupCurrentImage.src = powerupsData[powerup.type].style;
-  if (!isPowUpWaitingToSpawn) {
-    isPowUpWaitingToSpawn = true;
-    setTimeout(!powerup.active ? spawnPowAfterTime : null, 10000);
+  } while (obstacle.x === apple.x && obstacle.y === apple.y);
+  obstacleCurrentImage.src = obstaclesData[obstacle.type].style;
+}
+
+function spawnObstacleAfterTime() {
+  isObstacleUpWaitingToSpawn = false;
+  do {
+    obstacle = {
+      x: Math.floor(Math.random() * gridSize.x),
+      y: Math.floor(Math.random() * gridSize.y),
+      type: obstaclesData[Math.floor(Math.random() * obstaclesData.length)]
+        .name,
+      active: false,
+    };
+  } while (obstacle.x === apple.x && obstacle.y === apple.y);
+  obstacleCurrentImage.src = obstaclesData[obstacle.type].style;
+  if (!isObstacleUpWaitingToSpawn) {
+    isObstacleUpWaitingToSpawn = true;
+    setTimeout(!obstacle.active ? spawnObstacleAfterTime : null, 10000);
   }
 }
+
+obstaclePlacementBeginning();
 
 // Update canvas size upon initialization
 updateCanvasSize();
