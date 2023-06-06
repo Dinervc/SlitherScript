@@ -23,7 +23,7 @@
     <div id="sidebar">
       <span id="highScore">High Score: 0</span>
       <span>Difficulty:</span>
-      <select id="difficulty" onchange="updateDifficulty()">
+      <select id="difficulty">
         <option value="200">Easy</option>
         <option value="150">Medium</option>
         <option value="100">Hard</option>
@@ -41,9 +41,11 @@
         <option value="#0aa">Ocean</option>
         <option value="#80aa80">Grass</option>
       </select>
+      <button id="mute-button">Mute</button>
     </div>
 
     <div class="hamburger">&#9776;</div>
+    <script src="js/sound.js"></script>
     <script src="js/main.js"></script>
   </body>
 </html>

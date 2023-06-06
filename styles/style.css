@@ -94,6 +94,11 @@ canvas {
   font-size: 20px;
 }
 
+#mute-button {
+  margin-top: 15px;
+  width: 100%;
+}
+
 @media only screen and (max-width: 600px) {
   #sidebar {
     width: 93%vw;

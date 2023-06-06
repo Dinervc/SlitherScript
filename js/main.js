@@ -21,6 +21,8 @@ let highScore = localStorage.getItem("highScore") || 0;
 speed = document.getElementById("difficulty").value;
 let nextSpeed = speed;
 
+let isPowUpWaitingToSpawn = false;
+
 // Display the score and high score
 function displayScore() {
   document.getElementById("score").innerText = "Score: " + score;
@@ -60,7 +62,11 @@ function updateCanvasSize() {
       };
     } while (apple.x == powerup.x && apple.y == powerup.y);
   }
-  if (powerup.x >= gridSize.x || powerup.y >= gridSize.y) {
+  if (
+    powerup.x >= gridSize.x ||
+    (powerup.y >= gridSize.y && !isPowUpWaitingToSpawn)
+  ) {
+    isPowUpWaitingToSpawn = true;
     // Spawns powerup after 10-20 seconds
     setTimeout(
       spawnPowAfterTime,
@@ -123,10 +129,12 @@ const powerupCurrentImage = new Image();
 
 function powerUpPlacementBeginning() {
   do {
+    let x = powerupsData[Math.floor(Math.random() * powerupsData.length)].id;
     powerup = {
       x: Math.floor(Math.random() * gridSize.x),
       y: Math.floor(Math.random() * gridSize.y),
-      type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
+      type: x,
+      active: false,
     };
   } while (powerup.x === apple.x && powerup.y === apple.y);
   powerupCurrentImage.src = powerupsData[powerup.type].style;
@@ -135,14 +143,20 @@ function powerUpPlacementBeginning() {
 powerUpPlacementBeginning();
 
 function spawnPowAfterTime() {
+  isPowUpWaitingToSpawn = false;
   do {
     powerup = {
       x: Math.floor(Math.random() * gridSize.x),
       y: Math.floor(Math.random() * gridSize.y),
       type: powerupsData[Math.floor(Math.random() * powerupsData.length)].id,
+      active: false,
     };
   } while (powerup.x === apple.x && powerup.y === apple.y);
   powerupCurrentImage.src = powerupsData[powerup.type].style;
+  if (!isPowUpWaitingToSpawn) {
+    isPowUpWaitingToSpawn = true;
+    setTimeout(!powerup.active ? spawnPowAfterTime : null, 10000);
+  }
 }
 
 // Update canvas size upon initialization
@@ -183,12 +197,14 @@ function update(currentTime) {
         head.y >= gridSize.y
       ) {
         isDead = true;
+        playSound("resources/gameoverSound.mp3", false);
         return;
       }
 
       for (let i = 1; i < snake.length; i++) {
         if (snake[i].x === head.x && snake[i].y === head.y) {
           isDead = true;
+          playSound("resources/gameoverSound.mp3", false);
           return;
         }
       }
@@ -197,9 +213,10 @@ function update(currentTime) {
 
       // See if touching power up
       if (head.x === powerup.x && head.y === powerup.y) {
-        nextSpeed = document.getElementById("difficulty").value;
+        playSound("resources/powerupSound.mp3", false);
         mirror = 1;
         scoreAddition = 1;
+        nextSpeed = document.getElementById("difficulty").value;
 
         switch (powerupsData[powerup.type].id) {
           case 0:
@@ -216,6 +233,7 @@ function update(currentTime) {
             break;
           case 4:
             isDead = powerupsData[powerup.type].value;
+            playSound("resources/gameoverSound.mp3", false);
             break;
           default:
             break;
@@ -225,24 +243,29 @@ function update(currentTime) {
           x: -1,
           y: -1,
           type: null,
+          active: true,
         };
         // Spawns powerup after 10-20 seconds
-        setTimeout(
-          spawnPowAfterTime,
-          Math.floor(Math.random() * (20000 - 10000 + 1) + 10000)
-        );
+        if (!isPowUpWaitingToSpawn) {
+          isPowUpWaitingToSpawn = true;
+          setTimeout(
+            spawnPowAfterTime,
+            Math.floor(Math.random() * (30000 - 20000 + 1) + 20000)
+          );
+        }
       }
 
       // See if touching apple
       if (head.x === apple.x && head.y === apple.y) {
+        playSound("resources/eatSound.mp3", false);
+        nextSpeed = document.getElementById("difficulty").value;
+        mirror = 1;
         score += scoreAddition;
         if (score > highScore) {
           highScore = score;
           localStorage.setItem("highScore", highScore);
         }
         displayScore();
-
-        speed = nextSpeed;
 
         do {
           apple = {
@@ -362,6 +385,11 @@ function drawImageRect(img, x, y) {
   ctx.restore();
 }
 
+/* Lerp steht für lineare Interpolation 
+und ist in Unity für die Suche nach einem 
+gewünschten Wert zwischen zwei Werten bekannt. 
+
+In meinem Programm wäre das der Wert zwischen der neuen und vorherigen Zelle*/
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
@@ -489,9 +517,16 @@ pauseButton.addEventListener("click", function () {
   if (!paused) {
     // Record the time at which we resumed the game
     resumeTime = performance.now();
-    // Start the update loop again
-    requestAnimationFrame(update);
   }
+});
+
+let muted = true;
+let muteButton = document.getElementById("mute-button");
+
+muteButton.addEventListener("click", function () {
+  muted = !muted;
+  this.innerHTML = muted ? "Mute" : "Unmute";
+  return muted ? audio.pause() : audio.play();
 });
 
 let initialX = null;
